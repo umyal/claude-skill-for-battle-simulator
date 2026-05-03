@@ -11,14 +11,14 @@
 - **單場模擬**：完整戰報，每個數值都可追溯到公式
 - **批次模擬**：100 場跑下來看勝率、戰力差、極端場次
 - **可重現**：固定 seed → 固定結果，今天跑明天跑都一樣
-- **規則可改**：技能、上下限、隊伍配置都在 YAML 裡，企劃自己改不用碰 Python
+- **規則可改**：技能、上下限、隊伍配置都在 YAML 裡,企劃自己改不用碰 Python
 
 ## 快速開始（5 分鐘）
 
 ### 方式 A：下載 zip 直接用（推薦）
 
 1. 從本 repo 下載 [`battle-simulator.zip`](./battle-simulator.zip)
-2. 打開 Claude 桌面 App，左下角頭像 → **Settings → Capabilities**
+2. 打開 Claude（桌面 App 或 Web 版都可以），點頭像 → **Settings → Capabilities**
 3. 確認 **Code Execution and File Creation** 已開啟
 4. 在 **Skills** 區塊點 **Upload skill**，選擇剛剛下載的 zip
 5. 上傳後在 Skills 列表把它打開
@@ -31,8 +31,8 @@
 ### 方式 B：clone 後自行打包
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/battle-simulator-skill.git
-cd battle-simulator-skill
+git clone https://github.com/umyal/claude-skill-for-battle-simulator.git
+cd claude-skill-for-battle-simulator
 zip -r my-skill.zip ./battle-simulator
 # 把 my-skill.zip 上傳到 Claude
 ```
@@ -71,12 +71,10 @@ battle-simulator/
 
 這個 skill 示範了一個 4 層分工的 pattern：
 
-| 層 | 負責 | 受眾 |
-|---|---|---|
-| YAML / JSON | 規則與資料 | 企劃、設計師 |
-| Python | source of truth（公式計算） | 工程師 |
-| SKILL.md | 給 Claude 的操作守則與紀律 | LLM |
-| Claude | 理解需求、調用工具、呈現結果 | 使用者 |
+- **YAML / JSON** 負責規則與資料——企劃自己讀寫
+- **Python** 是 source of truth——做公式計算
+- **SKILL.md** 是給 Claude 的操作守則與紀律——限定它的行為
+- **Claude** 負責理解需求、調用工具、呈現結果——LLM 最擅長的事
 
 最關鍵的紀律寫在 SKILL.md 裡：**禁止 Claude 用語言模型推論代替計算結果**。所有戰力、抽樣、減傷、傷害數值都必須來自 Python 腳本——這保證了結果可重現、可驗證、無幻覺。
 
