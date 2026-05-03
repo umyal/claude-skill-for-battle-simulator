@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Skill",
+  "type": "object",
+  "required": ["id", "name", "phase", "effect_type", "value"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "phase": {
+      "type": "string",
+      "enum": ["before_combat", "after_combat"]
+    },
+    "effect_type": {
+      "type": "string",
+      "enum": ["damage_enemy", "heal_self"]
+    },
+    "value": {
+      "type": "number",
+      "minimum": 0
+    },
+    "activation_rate": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "default": 1.0
+    },
+    "description": { "type": "string" }
+  }
+}

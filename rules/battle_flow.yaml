@@ -1,0 +1,60 @@
+# 戰鬥流程定義（人類可讀文件，實作以 scripts/ 為準）
+
+battle:
+  description: 一場戰鬥由三個階段依序進行，雙方各自結算後比對結果
+  phases:
+    - id: before_combat
+      order: 1
+      description: |
+        雙方根據手下的 BC 段技能，同時對敵方造成傷害、對己方治療。
+        無先後手——A 與 B 的效果用「進入此階段時的戰力」作為基準同時計算，
+        最後再一起套用到雙方戰力上。
+
+    - id: combat
+      order: 2
+      description: |
+        核心傷害交換階段。
+        1. 每個手下根據自身 stability 對 power 抽樣，得到 sampled_power
+        2. 隊伍 sampled = Σ 各手下 sampled_power
+        3. mitigation = sampled / (raw_power_A + raw_power_B)，夾值
+        4. damage = raw_power · (1 − 對方 mitigation)
+        5. 雙方同時扣血，按手下戰力比例分攤
+      uses_rng: true
+
+    - id: after_combat
+      order: 3
+      description: |
+        雙方根據手下的 AC 段技能，同時對敵方造成傷害、對己方治療。
+        計算規則同 BC 段，使用「進入此階段時的戰力」作為基準。
+
+settlement_rules:
+  simultaneous: |
+    BC 與 AC 段都是「同時結算」：先各自累加敵我效果，再一次性套用。
+    範例：A 的 BC 對敵造成 10 傷、B 的 BC 對敵造成 5 傷，
+    雙方初始 50/40 → 進入 Combat 時為 45/30。
+
+  damage_distribution: |
+    隊伍承受的傷害按進入該段時各手下的當下戰力比例分攤。
+    範例：A1=60, A2=40，總傷 30 → A1 扣 18、A2 扣 12。
+
+  heal_distribution: |
+    治療同傷害分攤規則，但每個手下夾在 [0, 該手下原始戰力] 之間，溢出捨棄。
+
+  power_clamp: |
+    任何階段計算後，個別手下戰力夾在 [0, 原始戰力]。
+
+skill_activation:
+  default: 每場戰鬥每個技能觸發一次
+  with_activation_rate: |
+    若技能定義了 activation_rate（如 0.7），先用 RNG 擲骰，
+    擲出值 < activation_rate 才觸發本場效果。
+
+rng_order:
+  description: 全域 seed 共用，抽樣順序固定，確保 determinism
+  sequence:
+    - 1. BC 段：A 隊技能擲骰（A1 → A2 → A3，每個手下技能 by 順序）
+    - 2. BC 段：B 隊技能擲骰（B1 → B2 → B3）
+    - 3. Combat 段：A 隊穩定度抽樣（A1 → A2 → A3）
+    - 4. Combat 段：B 隊穩定度抽樣（B1 → B2 → B3）
+    - 5. AC 段：A 隊技能擲骰
+    - 6. AC 段：B 隊技能擲骰

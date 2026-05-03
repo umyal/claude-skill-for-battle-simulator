@@ -1,0 +1,18 @@
+team_id: alpha
+team_name: 鐵衛軍團
+minions:
+  - id: A1
+    name: 重裝步兵
+    power: 80
+    stability: 0.10
+    skills: [shield_bash, recover]
+  - id: A2
+    name: 弓手
+    power: 50
+    stability: 0.20
+    skills: [arrow_volley]
+  - id: A3
+    name: 醫療兵
+    power: 30
+    stability: 0.05
+    skills: [rally]

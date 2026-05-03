@@ -1,0 +1,55 @@
+# 技能圖鑑
+# 每個技能定義：
+#   id: 唯一識別
+#   name: 顯示名稱
+#   phase: before_combat | after_combat
+#   effect_type: damage_enemy | heal_self
+#   value: 效果數值（傷害量或治療量）
+#   activation_rate: 發動率（可選，0.0~1.0），未填預設 1.0（必發動）
+#   description: 中文描述（用於戰報）
+
+skills:
+  - id: shield_bash
+    name: 盾擊
+    phase: before_combat
+    effect_type: damage_enemy
+    value: 15
+    description: 戰鬥開始前以盾撞擊敵方陣型，造成 15 點傷害
+
+  - id: arrow_volley
+    name: 箭雨
+    phase: before_combat
+    effect_type: damage_enemy
+    value: 10
+    activation_rate: 0.8
+    description: 80% 機率在戰鬥開始前射出一輪箭雨，造成 10 點傷害
+
+  - id: recover
+    name: 急救
+    phase: after_combat
+    effect_type: heal_self
+    value: 12
+    description: 戰鬥結束後為己方治療 12 點戰力
+
+  - id: rally
+    name: 號令
+    phase: after_combat
+    effect_type: heal_self
+    value: 20
+    activation_rate: 0.6
+    description: 60% 機率在戰鬥結束後鼓舞己方，恢復 20 點戰力
+
+  - id: ambush
+    name: 伏擊
+    phase: before_combat
+    effect_type: damage_enemy
+    value: 25
+    activation_rate: 0.5
+    description: 50% 機率在戰鬥開始前伏擊敵方，造成 25 點傷害
+
+  - id: poison_arrow
+    name: 毒箭
+    phase: after_combat
+    effect_type: damage_enemy
+    value: 8
+    description: 戰鬥結束時毒素發作，對敵方造成 8 點傷害

@@ -1,0 +1,14 @@
+# 編隊限制
+team:
+  min_minions: 1
+  max_minions: 3
+
+minion:
+  power:
+    min: 1
+    max: 9999    # 軟性上限，防止離譜輸入
+  stability:
+    min: 0.0
+    max: 0.99    # 與 global_config.stability_max 同步
+  skills:
+    max_count: 4 # 一個手下最多 4 個技能（軟性上限）

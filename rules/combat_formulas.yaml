@@ -1,0 +1,52 @@
+# 戰鬥公式（人類可讀文件，實作以 scripts/formulas.py 為準）
+
+stability_sampling:
+  formula: sampled_power_i = power_i · U(1 − σ_i, 1 + σ_i)
+  where:
+    power_i: 手下 i 的原始戰力值
+    σ_i: 手下 i 的穩定度（夾在 [0, stability_max]）
+    U(a, b): 在 [a, b] 區間的均勻分布
+  team_total: sampled_team = Σ sampled_power_i
+
+mitigation:
+  formula: mitigation_X = clamp(sampled_X / (raw_power_A + raw_power_B), min, max)
+  notes:
+    - 分母用「雙方原始戰力總和」（未抽樣）
+    - 雙方 mitigation 各自獨立夾在 [mitigation.min, mitigation.max]，預設 [0.1, 0.9]
+    - 當運氣同向（雙方都好或都差）時，總和會偏離 1.0，這是公式 A 的特色
+
+damage:
+  formula: damage_X→Y = raw_power_X · (1 − mitigation_Y)
+  notes:
+    - 用攻方的「原始戰力」計算傷害（非抽樣值）
+    - 抽樣值的影響只反映在 mitigation 上
+
+power_clamp:
+  per_minion: 任何計算後 minion.power ∈ [0, minion.original_power]
+  
+distribution:
+  damage_to_minion_i: total_damage · (minion_i.current_power / team.current_total)
+  heal_to_minion_i: total_heal · (minion_i.current_power / team.current_total)
+  notes:
+    - 比例分母為「進入該段時」的隊伍當下戰力總和
+    - 戰力為 0 的手下不參與分攤（已倒下）
+    - 若整隊戰力為 0，傷害/治療不分配
+
+worked_example:
+  setup:
+    A: { A1: { power: 80, σ: 0.10 }, A2: { power: 50, σ: 0.20 } }
+    B: { B1: { power: 90, σ: 0.15 }, B2: { power: 40, σ: 0.10 } }
+    raw_power_A: 130
+    raw_power_B: 130
+    
+  combat_phase:
+    sampled_A: "假設 A1 抽到 1.05、A2 抽到 0.92 → 80·1.05 + 50·0.92 = 84 + 46 = 130"
+    sampled_B: "假設 B1 抽到 0.88、B2 抽到 1.06 → 90·0.88 + 40·1.06 = 79.2 + 42.4 = 121.6"
+    mitigation_A: clamp(130 / 260, 0.1, 0.9) = 0.500
+    mitigation_B: clamp(121.6 / 260, 0.1, 0.9) = 0.468
+    damage_A_to_B: 130 · (1 − 0.500) = 65.0
+    damage_B_to_A: 130 · (1 − 0.468) = 69.2
+    
+  distribution_to_A:
+    A1_share: 69.2 · (80/130) = 42.6  → A1 power: 80 → 37.4
+    A2_share: 69.2 · (50/130) = 26.6  → A2 power: 50 → 23.4

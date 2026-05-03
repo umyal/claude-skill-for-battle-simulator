@@ -1,0 +1,13 @@
+team_id: bravo
+team_name: 暗影刺客團
+minions:
+  - id: B1
+    name: 刺客頭目
+    power: 90
+    stability: 0.25
+    skills: [ambush, poison_arrow]
+  - id: B2
+    name: 遊俠
+    power: 60
+    stability: 0.15
+    skills: [arrow_volley, recover]

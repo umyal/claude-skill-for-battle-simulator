@@ -1,0 +1,101 @@
+# 批次模擬設定檔
+# 控制：要跑幾場、seed 怎麼產生、要統計什麼指標、戰報詳細度
+
+# ============ Seed 策略 ============
+# 預設使用等差數列，整批可重現。其他模式保留為可切換選項。
+seed_strategy:
+  # 預設模式：sequential | derived | random
+  mode: sequential
+
+  # 模式 1：sequential（等差數列，預設）
+  # seeds = [base, base+step, base+2·step, ..., base+(count-1)·step]
+  # 整批 100% 可重現，今天明天別人跑結果都一樣
+  sequential:
+    base: 10000
+    step: 1
+
+  # 模式 2：derived（master seed 衍生）
+  # 用 master_seed 初始化 RNG，產生 count 個子 seed
+  # 整批仍可重現（master_seed 固定 → 子 seed 序列固定）
+  # 子 seed 不連續，避免「相鄰 seed 結果太像」的疑慮
+  derived:
+    master_seed: 42
+
+  # 模式 3：random（真隨機）
+  # 每場用 secrets.randbits(64) 產生
+  # 整批不可重現，但每場 seed 仍記錄在 log 裡，可重現單場
+  # 不建議作為平衡性分析的預設
+  random: {}
+
+# ============ 預設批次大小 ============
+# 使用者沒指定場數時的預設值
+default_count: 100
+
+# ============ 要統計的指標 ============
+# 從每場 log 抽出這些欄位累積，最後計算 aggregations 中的統計量
+metrics:
+  # 戰力相關
+  - name: team_a_final_power
+    path: final_state.team_a.total_power
+    description: A 隊最終總戰力
+
+  - name: team_b_final_power
+    path: final_state.team_b.total_power
+    description: B 隊最終總戰力
+
+  - name: team_a_power_ratio
+    formula: final_state.team_a.total_power / input_snapshot.team_a.total_power
+    description: A 隊戰力保留率（最終/初始）
+
+  - name: team_b_power_ratio
+    formula: final_state.team_b.total_power / input_snapshot.team_b.total_power
+    description: B 隊戰力保留率
+
+  - name: power_diff
+    formula: final_state.team_a.total_power - final_state.team_b.total_power
+    description: 最終戰力差（正值 A 領先）
+
+  # Combat 階段指標
+  - name: mitigation_a
+    path: phases.combat.mitigation_a
+    description: A 隊在 Combat 段的減傷比例
+
+  - name: mitigation_b
+    path: phases.combat.mitigation_b
+    description: B 隊在 Combat 段的減傷比例
+
+  - name: sampled_total_a
+    path: phases.combat.sampled_total_a
+    description: A 隊抽樣戰力總和
+
+  - name: sampled_total_b
+    path: phases.combat.sampled_total_b
+    description: B 隊抽樣戰力總和
+
+  - name: damage_a_to_b
+    path: phases.combat.damage_a_to_b
+    description: Combat 段 A 對 B 的傷害
+
+  - name: damage_b_to_a
+    path: phases.combat.damage_b_to_a
+    description: Combat 段 B 對 A 的傷害
+
+# 要計算的統計量
+aggregations: [mean, median, stddev, min, max, p10, p90]
+
+# ============ 戰報詳細度閾值 ============
+# 場數 ≤ show_each_battle：批次戰報中逐場列出簡要結果
+# 場數 ≤ highlight_extremes：批次戰報中列舉極端場次（最大勝幅等）
+# 超過 highlight_extremes：純匯總統計
+report_thresholds:
+  show_each_battle: 10
+  highlight_extremes: 1000
+
+# 極端場次列舉數量（每類別取前 N 場）
+extreme_picks:
+  per_category: 3
+  categories:
+    - max_team_a_advantage    # A 隊最大勝幅
+    - max_team_b_advantage    # B 隊最大勝幅
+    - lowest_mitigation_a     # A 隊最差減傷（運氣最爛的一場）
+    - highest_mitigation_a    # A 隊最佳減傷（運氣最好的一場）
